@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:vkio/vk.dart';
 
-class RepostTrackerLayout extends StatefulWidget {
+class RepostTracker extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() {
@@ -12,7 +12,7 @@ class RepostTrackerLayout extends StatefulWidget {
   }
 }
 
-class RepostTrackerState extends State<RepostTrackerLayout> {
+class RepostTrackerState extends State<RepostTracker> {
 
   List<RepostData> data = [];
   @override
@@ -34,9 +34,7 @@ class RepostTrackerState extends State<RepostTrackerLayout> {
   }
 
   _loadReposts() async {
-    VK vk = new VK(
-        token:'05b4daeccbf3c5318e7d6cd2f7d61569ac0fc865fd48fd7a411f38d5d6766ba16a54fbd679755dbe701d5'
-    );
+    VK vk = _vkAuth();
 
     var repostsDataList = List<RepostData>();
 
@@ -55,6 +53,12 @@ class RepostTrackerState extends State<RepostTrackerLayout> {
     setState(() {
       data = repostsDataList;
     });
+  }
+
+  _vkAuth() {
+    return new VK(
+        token:'05b4daeccbf3c5318e7d6cd2f7d61569ac0fc865fd48fd7a411f38d5d6766ba16a54fbd679755dbe701d5'
+    );
   }
 
   List<Widget> _buildList() {
