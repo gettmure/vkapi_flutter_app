@@ -54,27 +54,17 @@ class MostWeeklyLikedPostState extends State<MostWeeklyLikedPost> {
   }
 
   _getMostLikedPost(var map) {
-    Map<String, dynamic> post = new Map<String, dynamic>();
-    for (var data in map) {
-      if (data.containsKey('signer_key')) {
-        int max = 0;
+    var post;
+    int max = 0;
+    map.forEach((dynamic data) {
+      if (data.containsKey('signer_id')) {
         int likesCount = data['likes']['count'];
         if (likesCount > max) {
           max = likesCount;
           post = data;
         }
       }
-    }
-//    map.forEach((dynamic data) {
-//      if (data.containsKey('signer_key')) {
-//        int max = 0;
-//        int likesCount = data['likes']['count'];
-//        if (likesCount > max) {
-//          max = likesCount;
-//          post = data;
-//        }
-//      }
-//    });
-//    return post;
+    });
+    return post;
   }
 }
