@@ -1,7 +1,5 @@
-import 'package:vkapi_flutter_app/RepostData.dart';
+import 'package:vkapi_flutter_app/PostData.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:vkio/vk.dart';
 
 class MostWeeklyLikedPost extends StatefulWidget {
@@ -14,20 +12,22 @@ class MostWeeklyLikedPost extends StatefulWidget {
 
 class MostWeeklyLikedPostState extends State<MostWeeklyLikedPost> {
 
+  PostData mostLikedPost;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text('VK Most Weekly Liked Post'),
+      appBar: AppBar(
+        title: Text('VK Most Weekly Like Post'),
+      ),
+      body: Container(
+        child: Center(
+          child: _buildMostLikedPostWidget(),
         ),
-        body: Container(
-          child: Center(
-              child: FloatingActionButton(
-                child: Icon(Icons.refresh),
-                onPressed: _loadPosts,
-              )
-          ),
-        )
+      ),
+      floatingActionButton: FloatingActionButton(
+        child:  Icon(Icons.refresh),
+        onPressed: () => _loadPosts(),
+      ),
     );
   }
 
@@ -48,15 +48,32 @@ class MostWeeklyLikedPostState extends State<MostWeeklyLikedPost> {
       return response['response'];
     });
 
-    final posts = response['items'];
-    final post = _getMostLikedPost(posts);
-    print(post['likes']['count']);
+    final allPosts = response['items'];
+    final allUsers = response['profiles'];
+
+    _collectPostInfo(allPosts, allUsers);
   }
 
-  _getMostLikedPost(var map) {
+  _collectPostInfo(var posts, var users) {
+    final post = _getMostLikedPost(posts);
+    final user = _getPostAuthor(users, post['signer_id']);
+
+    String userVkUrl = 'vk.com/' + user['screen_name'];
+    String userName = user['first_name'] + ' ' + user['last_name'];
+    NetworkImage userProfilePicture = NetworkImage(user['photo_100']);
+    NetworkImage postPicture = NetworkImage(post['attachments'][0]['photo']['sizes'][3]['url']);
+    int likes = post['likes']['count'];
+
+    setState(() {
+      mostLikedPost = new PostData(url: userVkUrl, authorName: userName,
+          profilePicture: userProfilePicture, postAttachedPicture: postPicture, likesCount: likes);
+    });
+  }
+
+  _getMostLikedPost(var posts) {
     var post;
     int max = 0;
-    map.forEach((dynamic data) {
+    for (var data in posts) {
       if (data.containsKey('signer_id')) {
         int likesCount = data['likes']['count'];
         if (likesCount > max) {
@@ -64,7 +81,52 @@ class MostWeeklyLikedPostState extends State<MostWeeklyLikedPost> {
           post = data;
         }
       }
-    });
+    }
+
     return post;
   }
+
+  _getPostAuthor(var users, var authorId) {
+    for (var data in users) {
+      if (data['id'] == authorId) {
+        return data;
+      }
+    }
+
+    return null;
+  }
+
+  Column _buildMostLikedPostWidget() {
+    if (mostLikedPost == null) return Column();
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: <Widget>[
+        Image(
+          alignment: FractionalOffset(0, 20),
+          image: mostLikedPost.postAttachedPicture,
+        ),
+        ListTile (
+            title: Text(mostLikedPost.authorName),
+            subtitle: Text(mostLikedPost.url),
+            leading: CircleAvatar(
+              backgroundImage: mostLikedPost.profilePicture,
+              radius: 26,
+            ),
+            trailing: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                Icon(
+                  Icons.favorite,
+                  color: Colors.red,
+                ),
+                Text(mostLikedPost.likesCount.toString()),
+              ],
+            )
+        ),
+      ],
+    );
+  }
+
 }

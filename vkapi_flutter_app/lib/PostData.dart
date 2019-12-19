@@ -1,12 +1,11 @@
 import 'package:flutter/cupertino.dart';
 
 class PostData {
-  int postedAt;
-  int authorId;
+  String url;
   String authorName;
-  String screenName;
   NetworkImage profilePicture;
-  NetworkImage postPicture;
+  NetworkImage postAttachedPicture;
+  int likesCount;
 
-  PostData({this.postedAt, this.authorId, this.authorName, this.screenName, this.profilePicture, this.postPicture});
+  PostData({this.url, this.authorName, this.profilePicture, this.postAttachedPicture, this.likesCount});
 }
