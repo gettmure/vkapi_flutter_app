@@ -11,7 +11,6 @@ class MostWeeklyLikedPost extends StatefulWidget {
 }
 
 class MostWeeklyLikedPostState extends State<MostWeeklyLikedPost> {
-
   PostData mostLikedPost;
   @override
   Widget build(BuildContext context) {
