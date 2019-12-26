@@ -1,6 +1,11 @@
+import 'dart:async';
+
+import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
 import 'package:vkapi_flutter_app/PostData.dart';
 import 'package:flutter/material.dart';
+import 'package:vkapi_flutter_app/widgets/Hyperlink.dart';
 import 'package:vkio/vk.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MostWeeklyLikedPost extends StatefulWidget {
 
@@ -30,11 +35,30 @@ class MostWeeklyLikedPostState extends State<MostWeeklyLikedPost> {
     );
   }
 
-  _loadPosts() async {
-    VK vk = new VK(
-        token:'05b4daeccbf3c5318e7d6cd2f7d61569ac0fc865fd48fd7a411f38d5d6766ba16a54fbd679755dbe701d5'
-    );
+  _login() async {
+    final flutterWebviewPlugin = new FlutterWebviewPlugin();
+    const url = 'https://oauth.vk.com/authorize?client_id=7246061&display=mobile&redirect_uri=https://vk.com/&scope=groups,wall&response_type=token&v=5.103';
+    flutterWebviewPlugin.launch(url);
+    String redirectedUrl = await flutterWebviewPlugin.onUrlChanged.first.then((String url) {
+      return url;
+    });
+    flutterWebviewPlugin.close();
+    flutterWebviewPlugin.dispose();
+    const START = "=";
+    const END = "&";
 
+    int startIndex = redirectedUrl.indexOf(START);
+    int endIndex = redirectedUrl.indexOf(END);
+
+    String accessToken = redirectedUrl.substring(startIndex + 1, endIndex);
+
+    return new VK(
+        token: accessToken
+    );
+  }
+
+  _loadPosts() async {
+    VK vk = await _login();
     final response = await vk.api.wall.get({
       'offset': '1',
       'owner_id': '-169971271',
@@ -107,7 +131,7 @@ class MostWeeklyLikedPostState extends State<MostWeeklyLikedPost> {
         ),
         ListTile (
             title: Text(mostLikedPost.authorName),
-            subtitle: Text(mostLikedPost.url),
+            subtitle: Hyperlink('https://' + mostLikedPost.url + '/', mostLikedPost.url),
             leading: CircleAvatar(
               backgroundImage: mostLikedPost.profilePicture,
               radius: 26,

@@ -6,8 +6,11 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:vkapi_flutter_app/MostWeeklyLikedPost.dart';
 import 'package:vkapi_flutter_app/RepostTracker.dart';
 import 'package:flutter/material.dart';
+import 'package:vkapi_flutter_app/ChooseAction.dart';
 import 'package:flutter_vk_sdk/flutter_vk_sdk.dart';
 import 'package:http/http.dart' as http;
+
+import 'MostWeeklyLikedPost.dart';
 
 void main() => runApp(VkApiApp());
 
@@ -37,35 +40,9 @@ class BodyWidgetState extends State<BodyWidget>  {
         title: Text('Vk Helper'),
       ),
       body: Center(
-        child: FlatButton(
-          color: Colors.blue,
-          textColor: Colors.white,
-          padding: EdgeInsets.all(8.0),
-          splashColor: Colors.blueAccent,
-          onPressed: () => _login(),
-          child: Text(
-            "LOGIN",
-            style: TextStyle(fontSize: 20.0),
-          ),
-        ),
+        child: ActoinList(),
       ),
     );
-  }
-
-  _login() async {
-    String accessToken;
-    final flutterWebviewPlugin = new FlutterWebviewPlugin();
-    final url = 'https://oauth.vk.com/authorize?client_id=7246061&display=mobile&redirect_uri=https://vk.com/&scope=groups,wall&response_type=token&v=5.103&state=123456';
-    flutterWebviewPlugin.launch(url);
-    StreamSubscription<String> onChangeUrl;
-    onChangeUrl = flutterWebviewPlugin.onUrlChanged.listen((String url) {
-      if (mounted) {
-        accessToken = url;
-        flutterWebviewPlugin.dispose();
-        flutterWebviewPlugin.close();
-      }
-    });
-    print(accessToken);
   }
 }
 

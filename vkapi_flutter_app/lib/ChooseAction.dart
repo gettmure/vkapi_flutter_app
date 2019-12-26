@@ -7,9 +7,6 @@ class ActoinList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Vk Helper'),
-      ),
       body: Container(
         child: Center(
           child: Column(
