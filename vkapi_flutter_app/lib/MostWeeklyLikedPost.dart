@@ -38,12 +38,14 @@ class MostWeeklyLikedPostState extends State<MostWeeklyLikedPost> {
   _login() async {
     final flutterWebviewPlugin = new FlutterWebviewPlugin();
     const url = 'https://oauth.vk.com/authorize?client_id=7246061&display=mobile&redirect_uri=https://vk.com/&scope=groups,wall&response_type=token&v=5.103';
+
     flutterWebviewPlugin.launch(url);
     String redirectedUrl = await flutterWebviewPlugin.onUrlChanged.first.then((String url) {
       return url;
     });
     flutterWebviewPlugin.close();
     flutterWebviewPlugin.dispose();
+
     const START = "=";
     const END = "&";
 

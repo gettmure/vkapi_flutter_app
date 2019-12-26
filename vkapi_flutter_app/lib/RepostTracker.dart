@@ -1,3 +1,4 @@
+import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
 import 'package:vkapi_flutter_app/RepostData.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -69,14 +70,58 @@ class RepostTrackerState extends State<RepostTracker> {
         });
   }
 
+
+
+  _login() async {
+    final flutterWebviewPlugin = new FlutterWebviewPlugin();
+    const url = 'https://oauth.vk.com/authorize?client_id=7246061&display=mobile&redirect_uri=https://vk.com/&scope=groups,wall&response_type=token&v=5.103';
+
+    flutterWebviewPlugin.launch(url);
+    String redirectedUrl = await flutterWebviewPlugin.onUrlChanged.first.then((String url) {
+      return url;
+    });
+    flutterWebviewPlugin.close();
+    flutterWebviewPlugin.dispose();
+
+    const START = "=";
+    const END = "&";
+
+    int startIndex = redirectedUrl.indexOf(START);
+    int endIndex = redirectedUrl.indexOf(END);
+
+    String accessToken = redirectedUrl.substring(startIndex + 1, endIndex);
+
+    return new VK(
+        token: accessToken
+    );
+  }
+
+  _getGroupId(String url) {
+    const START = 'wall';
+    const END = '_';
+
+    int startIndex = url.indexOf(START);
+    int endIndex = url.indexOf(END);
+
+    return url.substring(startIndex + START.length, endIndex);
+  }
+
+  _getPostId(String url) {
+    const START = '_';
+    return url.substring(url.indexOf(START) + 1, url.length);
+  }
+
   _loadReposts(String url) async {
-    print(url);
-    VK vk = _vkAuth();
+    String groupId = _getGroupId(url);
+    String postId = _getPostId(url);
+    VK vk = await _login();
 
     var repostsDataList = List<RepostData>();
 
-    final reposts = await vk.api.wall.getReposts(
-        {'owner_id': '-169971271', 'post_id': '5904'}).then((response) {
+    final reposts = await vk.api.wall.getReposts({
+          'owner_id': groupId,
+          'post_id': postId
+        }).then((response) {
       return response['response']['profiles'];
     });
 
@@ -91,12 +136,6 @@ class RepostTrackerState extends State<RepostTracker> {
     setState(() {
       data = repostsDataList;
     });
-  }
-
-  _vkAuth() {
-    return new VK(
-        token:
-            '05b4daeccbf3c5318e7d6cd2f7d61569ac0fc865fd48fd7a411f38d5d6766ba16a54fbd679755dbe701d5');
   }
 
   List<Widget> _buildList() {
