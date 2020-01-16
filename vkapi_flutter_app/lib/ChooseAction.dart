@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'MostWeeklyLikedPost.dart';
 import 'RepostTracker.dart';
 
-class ActoinList extends StatelessWidget {
+class ActionList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(

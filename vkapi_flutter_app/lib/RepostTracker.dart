@@ -1,9 +1,8 @@
 import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
 import 'package:vkapi_flutter_app/RepostData.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:vkio/vk.dart';
+import 'package:validators/validators.dart';
 
 class RepostTracker extends StatefulWidget {
   @override
@@ -13,6 +12,7 @@ class RepostTracker extends StatefulWidget {
 }
 
 class RepostTrackerState extends State<RepostTracker> {
+  VK _vk;
   List<RepostData> data = [];
 
   @override
@@ -70,14 +70,14 @@ class RepostTrackerState extends State<RepostTracker> {
         });
   }
 
-
-
   _login() async {
     final flutterWebviewPlugin = new FlutterWebviewPlugin();
-    const url = 'https://oauth.vk.com/authorize?client_id=7246061&display=mobile&redirect_uri=https://vk.com/&scope=groups,wall&response_type=token&v=5.103';
+    const url =
+        'https://oauth.vk.com/authorize?client_id=7246061&display=mobile&redirect_uri=https://vk.com/&scope=groups,wall&response_type=token&v=5.103';
 
     flutterWebviewPlugin.launch(url);
-    String redirectedUrl = await flutterWebviewPlugin.onUrlChanged.first.then((String url) {
+    String redirectedUrl =
+        await flutterWebviewPlugin.onUrlChanged.first.then((String url) {
       return url;
     });
     flutterWebviewPlugin.close();
@@ -91,9 +91,7 @@ class RepostTrackerState extends State<RepostTracker> {
 
     String accessToken = redirectedUrl.substring(startIndex + 1, endIndex);
 
-    return new VK(
-        token: accessToken
-    );
+    return new VK(token: accessToken);
   }
 
   _getGroupId(String url) {
@@ -112,30 +110,83 @@ class RepostTrackerState extends State<RepostTracker> {
   }
 
   _loadReposts(String url) async {
-    String groupId = _getGroupId(url);
-    String postId = _getPostId(url);
-    VK vk = await _login();
+    if (url.isNotEmpty) {
+      if (isURL(url) && matches(url, "w=wall-[0-9]+_[0-9]+")) {
+        String groupId = _getGroupId(url);
+        String postId = _getPostId(url);
 
-    var repostsDataList = List<RepostData>();
+        if (_vk == null) {
+          _vk = await _login();
+        }
 
-    final reposts = await vk.api.wall.getReposts({
-          'owner_id': groupId,
-          'post_id': postId
-        }).then((response) {
-      return response['response']['profiles'];
-    });
+        var repostsDataList = List<RepostData>();
 
-    reposts.forEach((dynamic value) {
-      var repost = RepostData(
-          id: value['id'],
-          name: value['first_name'] + ' ' + value['last_name'],
-          profilePicture: NetworkImage(value['photo_100']));
-      repostsDataList.add(repost);
-    });
-
-    setState(() {
-      data = repostsDataList;
-    });
+        final reposts = await _vk.api.wall.getReposts(
+            {'owner_id': groupId, 'post_id': postId}).then((response) {
+          return response['response']['profiles'];
+        });
+        if (!(reposts == [])) {
+          reposts.forEach((dynamic value) {
+            RepostData repost = RepostData(
+                id: value['id'],
+                name: value['first_name'] + ' ' + value['last_name'],
+                profilePicture: NetworkImage(value['photo_100']));
+            repostsDataList.add(repost);
+          });
+          setState(() {
+            data = repostsDataList;
+          });
+        }
+      } else {
+        showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text("Ошибка!"),
+                content: Text("Неверная ссылка!"),
+                actions: <Widget>[
+                  FlatButton(
+                    child: Text("Ввести ссылку ещё раз"),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _showPostForm();
+                    },
+                  ),
+                  FlatButton(
+                    child: Text("ОК"),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                  )
+                ],
+              );
+            });
+      }
+    } else {
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text("Ошибка!"),
+              content: Text("Поле для ссылки не может быть пустым!"),
+              actions: <Widget>[
+                FlatButton(
+                  child: Text("Ввести ссылку ещё раз"),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _showPostForm();
+                  },
+                ),
+                FlatButton(
+                  child: Text("ОК"),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                )
+              ],
+            );
+          });
+    }
   }
 
   List<Widget> _buildList() {
